@@ -7,6 +7,8 @@ import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { ImageWithFallback } from './components/figma/ImageWithFallback';
 import logoImg from '@/imports/WhatsApp_Image_2026-06-21_at_12.38.52_PM.jpeg';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface QuotationItem {
   id: string;
@@ -117,48 +119,29 @@ export default function App() {
 
   const downloadPDF = async () => {
     try {
-      const res = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quoteNumber: formData.quoteNumber,
-          date: formData.date,
-          validUntil: formData.validUntil,
-          billToName: formData.billToName,
-          billToCompany: formData.billToCompany,
-          billToAddress: formData.billToAddress,
-          billToEmail: formData.billToEmail,
-          billToPhone: formData.billToPhone,
-          shipToName: formData.shipToName,
-          shipToCompany: formData.shipToCompany,
-          shipToAddress: formData.shipToAddress,
-          shipToEmail: formData.shipToEmail,
-          shipToPhone: formData.shipToPhone,
-          paymentTerms: formData.paymentTerms,
-          taxRate: formData.taxRate,
-          items: items.map(i => ({
-            id: i.id,
-            details: i.details,
-            qty: i.qty,
-            unitPrice: i.unitPrice,
-          })),
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || 'Server error');
+      const preview = previewRef.current;
+      if (!preview) {
+        alert('Preview not available.');
+        return;
       }
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Quotation_${formData.quoteNumber}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const canvas = await html2canvas(preview, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const ratio = Math.min(pdfW / imgW, pdfH / imgH);
+      const imgX = (pdfW - imgW * ratio) / 2;
+
+      pdf.addImage(imgData, 'PNG', imgX, 0, imgW * ratio, imgH * ratio);
+      pdf.save(`Quotation_${formData.quoteNumber}.pdf`);
     } catch (err) {
       console.error('PDF download failed:', err);
       alert('Failed to download PDF. Please try again.');
@@ -246,7 +229,7 @@ export default function App() {
             </Card>
 
             <Card className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">Bill To</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">Bill From</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="billToName">Client Name</Label>
@@ -293,7 +276,7 @@ export default function App() {
             </Card>
 
             <Card className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">Ship To</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900">Bill To</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="shipToName">Recipient Name</Label>
@@ -498,19 +481,19 @@ export default function App() {
                   <div
                     className="absolute right-0 top-0 h-full flex items-center justify-center"
                     style={{
-                      width: '40px',
+                      width: '50px',
                       backgroundColor: '#93b4bd',
                       writingMode: 'vertical-rl',
                       textOrientation: 'mixed'
                     }}
                   >
-                    <span className="text-white font-bold tracking-widest transform rotate-180" style={{ fontSize: '11px', letterSpacing: '3px' }}>
+                    <span className="text-white font-bold tracking-widest transform rotate-180" style={{ fontSize: '14px', letterSpacing: '4px' }}>
                       BURHAN ALUMINIUM TRADERS
                     </span>
                   </div>
 
                   {/* Content Area */}
-                  <div style={{ padding: '30px 50px 30px 30px' }}>
+                  <div style={{ padding: '30px 55px 30px 30px' }}>
                     {/* Quote Info Row */}
                     <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
                       <div>
@@ -534,7 +517,7 @@ export default function App() {
                           className="font-bold text-white px-3 py-1 mb-2"
                           style={{ backgroundColor: '#93b4bd' }}
                         >
-                          BILL TO
+                          BILL FROM
                         </div>
                         <div className="space-y-1 px-2">
                           <div className="font-semibold text-gray-900">{formData.billToName || '-'}</div>
@@ -549,7 +532,7 @@ export default function App() {
                           className="font-bold text-white px-3 py-1 mb-2"
                           style={{ backgroundColor: '#93b4bd' }}
                         >
-                          SHIP TO
+                          BILL TO
                         </div>
                         <div className="space-y-1 px-2">
                           <div className="font-semibold text-gray-900">{formData.shipToName || '-'}</div>

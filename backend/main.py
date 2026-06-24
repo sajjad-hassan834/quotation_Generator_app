@@ -95,11 +95,11 @@ def build_pdf(data: QuotationData) -> bytes:
     pdf.cell(0, 6, "Quality Aluminium Solutions")
 
     # ─── RIGHT SIDEBAR ───
-    sb_w = 10
+    sb_w = 14
     sb_x = pw - sb_w
     pdf.set_fill_color(*TEAL)
     pdf.rect(sb_x, 32, sb_w, 265, "F")
-    pdf.set_font("Helvetica", "B", 6)
+    pdf.set_font("Helvetica", "B", 8)
     pdf.set_text_color(*WHITE)
     with pdf.rotation(90, sb_x + sb_w / 2, 160):
         pdf.set_xy(sb_x - 65, 155)
@@ -151,9 +151,9 @@ def build_pdf(data: QuotationData) -> bytes:
             pdf.cell(half, 5, f"  {val}")
             yy += 5
 
-    draw_address_block("BILL TO", data.billToName, data.billToCompany,
+    draw_address_block("BILL FROM", data.billToName, data.billToCompany,
                        data.billToAddress, data.billToEmail, data.billToPhone, lm)
-    draw_address_block("SHIP TO", data.shipToName, data.shipToCompany,
+    draw_address_block("BILL TO", data.shipToName, data.shipToCompany,
                        data.shipToAddress, data.shipToEmail, data.shipToPhone,
                        lm + half + 10)
 
