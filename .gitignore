@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+*.pyc
+__pycache__/
+backend/__pycache__/
+.env
+.DS_Store
+*.log
+test_*.py
+test_*.pdf
+.pnpm-store/
+*.tsbuildinfo
